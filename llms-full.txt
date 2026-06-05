@@ -1,0 +1,23 @@
+# ts-lib-template — Full API Reference
+
+> One-line description
+
+<!-- Complete API documentation for LLM context windows -->
+
+## Exports
+
+All imports come from the package root:
+
+```typescript
+import {} from 'ts-lib-template';
+```
+
+---
+
+## Source
+
+- Repository: https://github.com/axelhamil/ts-lib-template
+- License: MIT
+- Runtime: Node >= 24, ESM only
+- Build: tsdown (ESM, dts, sourcemap, minify, treeshake)
+- Types validated with publint + are-the-types-wrong
