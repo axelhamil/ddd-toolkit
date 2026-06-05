@@ -1,6 +1,6 @@
 import type { IDomainEvent } from '../domain/domain-event.js';
 
-export const EVENT_HANDLER_SYMBOL: unique symbol = Symbol.for('ddd-toolkit/event-handler');
+export const EVENT_HANDLER_SYMBOL: unique symbol = Symbol.for('aggregate-kit/event-handler');
 
 /** A dependency-injected event handler tagged with a brand symbol for detection. */
 export type EventHandler<T extends IDomainEvent = IDomainEvent> = {

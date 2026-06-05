@@ -1,5 +1,5 @@
 {
-  "name": "ddd-toolkit",
+  "name": "aggregate-kit",
   "version": "1.0.0",
   "private": false,
   "description": "Zero-dependency DDD building blocks for TypeScript: Result, Option, Entity, Aggregate, ValueObject, domain events and repository ports.",
@@ -8,12 +8,12 @@
   "author": "axelhamil",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/axelhamil/ddd-toolkit.git"
+    "url": "git+https://github.com/axelhamil/aggregate-kit.git"
   },
   "bugs": {
-    "url": "https://github.com/axelhamil/ddd-toolkit/issues"
+    "url": "https://github.com/axelhamil/aggregate-kit/issues"
   },
-  "homepage": "https://github.com/axelhamil/ddd-toolkit#readme",
+  "homepage": "https://github.com/axelhamil/aggregate-kit#readme",
   "keywords": [
     "ddd",
     "domain-driven-design",

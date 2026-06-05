@@ -1,14 +1,14 @@
-# ddd-toolkit
+# aggregate-kit
 
 Zero-dependency Domain-Driven Design building blocks for TypeScript.
 
-[![NPM Version](https://img.shields.io/npm/v/ddd-toolkit)](https://www.npmjs.com/package/ddd-toolkit)
-[![NPM Downloads](https://img.shields.io/npm/dm/ddd-toolkit)](https://www.npmjs.com/package/ddd-toolkit)
+[![NPM Version](https://img.shields.io/npm/v/aggregate-kit)](https://www.npmjs.com/package/aggregate-kit)
+[![NPM Downloads](https://img.shields.io/npm/dm/aggregate-kit)](https://www.npmjs.com/package/aggregate-kit)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 [![Zero Dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)](#)
 
-📦 **npm:** [npmjs.com/package/ddd-toolkit](https://www.npmjs.com/package/ddd-toolkit)
+📦 **npm:** [npmjs.com/package/aggregate-kit](https://www.npmjs.com/package/aggregate-kit)
 
 The reusable tactical patterns for a DDD / Clean Architecture codebase — `Result`,
 `Option`, `Entity`, `Aggregate`, `ValueObject`, domain events and repository ports —
@@ -27,19 +27,19 @@ extracted into one ESM-only package with **no runtime dependencies**.
 ## Install
 
 ```bash
-pnpm add ddd-toolkit  # or npm i ddd-toolkit / bun add ddd-toolkit
+pnpm add aggregate-kit  # or npm i aggregate-kit / bun add aggregate-kit
 ```
 
 Node >= 24, ESM only. Everything is imported from the package root:
 
 ```typescript
-import { Result, Option, Entity, Aggregate, ValueObject } from 'ddd-toolkit';
+import { Result, Option, Entity, Aggregate, ValueObject } from 'aggregate-kit';
 ```
 
 ## Quick start
 
 ```typescript
-import { Aggregate, BaseDomainEvent, Result, UUID, ValueObject } from 'ddd-toolkit';
+import { Aggregate, BaseDomainEvent, Result, UUID, ValueObject } from 'aggregate-kit';
 
 // 1. A validated value object — never throws, returns a Result.
 class Email extends ValueObject<string> {
@@ -131,7 +131,7 @@ if (email.isSuccess) {
 ### Validate at the boundary with value objects
 
 ```typescript
-import { Result, ValueObject } from 'ddd-toolkit';
+import { Result, ValueObject } from 'aggregate-kit';
 
 class Quantity extends ValueObject<number> {
   protected validate(value: number): Result<number> {
@@ -142,11 +142,11 @@ class Quantity extends ValueObject<number> {
 ```
 
 Need schema validation? `validate()` is a plain method — plug in any validator
-(this keeps `ddd-toolkit` dependency-free):
+(this keeps `aggregate-kit` dependency-free):
 
 ```typescript
 import { z } from 'zod';
-import { Result, ValueObject } from 'ddd-toolkit';
+import { Result, ValueObject } from 'aggregate-kit';
 
 const schema = z.string().uuid();
 
@@ -161,7 +161,7 @@ class UserId extends ValueObject<string> {
 ### Scoped repositories never leak existence
 
 ```typescript
-import { RepoScope, type ScopedRepository, type ScopeOf, UUID } from 'ddd-toolkit';
+import { RepoScope, type ScopedRepository, type ScopeOf, UUID } from 'aggregate-kit';
 
 declare const notes: ScopedRepository<Note, ScopeOf<'user'>>;
 
@@ -173,7 +173,7 @@ const result = await notes.findById(noteId, scope);
 ### Drain events through a unit of work
 
 ```typescript
-import { EventCollector } from 'ddd-toolkit';
+import { EventCollector } from 'aggregate-kit';
 
 await EventCollector.runWithContext(async () => {
   // ... mutate aggregates; EventCollector.add(aggregate.pullDomainEvents()) ...

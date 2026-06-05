@@ -1,4 +1,4 @@
-# ddd-toolkit — Full API Reference
+# aggregate-kit — Full API Reference
 
 > Zero-dependency Domain-Driven Design building blocks for TypeScript. ESM-only, Node >= 24. Errors are values (`Result`/`Option`), the domain is pure, ownership is enforced at the repository port.
 
@@ -11,7 +11,7 @@ import {
   BaseRepository, ScopedRepository, RepoScope, createPaginatedResult, DEFAULT_PAGINATION,
   IUnitOfWork, AppErrorException, httpStatusFromCode, DatabaseOperationError, InputParseError,
   EventCollector, InMemoryEventDispatcher, onEvent, isEventHandler, domainEventToOutboxRow,
-} from 'ddd-toolkit';
+} from 'aggregate-kit';
 ```
 
 ---
@@ -195,7 +195,7 @@ isEventHandler(handler(deps)); // true
 
 ## Source
 
-- Repository: https://github.com/axelhamil/ddd-toolkit
+- Repository: https://github.com/axelhamil/aggregate-kit
 - License: MIT
 - Runtime: Node >= 24, ESM only, zero runtime dependencies (`node:crypto`, `node:async_hooks` from stdlib)
 - Build: tsdown (ESM, dts, sourcemap, minify, treeshake); types validated with publint + are-the-types-wrong

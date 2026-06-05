@@ -1,4 +1,4 @@
-# ddd-toolkit
+# aggregate-kit
 
 > Zero-dependency Domain-Driven Design building blocks for TypeScript: Result, Option, Entity, Aggregate, ValueObject, domain events and repository ports.
 
@@ -6,7 +6,7 @@ ESM-only TypeScript library. Node >= 24, zero runtime dependencies. Errors are v
 
 ## Public API
 
-All exports come from the package root (`import { ... } from 'ddd-toolkit'`).
+All exports come from the package root (`import { ... } from 'aggregate-kit'`).
 
 Primitives:
 - `Result<T, E = string>` — success/failure container: `ok`, `fail`, `combine`, `getValue`, `getError`, `isSuccess`, `isFailure`.
@@ -37,13 +37,13 @@ Events:
 ## Install
 
 ```
-pnpm add ddd-toolkit
+pnpm add aggregate-kit
 ```
 
 ## Quick Example
 
 ```typescript
-import { Result, ValueObject } from 'ddd-toolkit';
+import { Result, ValueObject } from 'aggregate-kit';
 
 class Email extends ValueObject<string> {
   protected validate(value: string): Result<string> {
@@ -56,5 +56,5 @@ const email = Email.create('Ada@Example.com'); // Result<Email>
 
 ## Documentation
 
-- Full docs: https://github.com/axelhamil/ddd-toolkit
+- Full docs: https://github.com/axelhamil/aggregate-kit
 - Detailed API: llms-full.txt

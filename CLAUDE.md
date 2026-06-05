@@ -1,4 +1,4 @@
-# ddd-toolkit
+# aggregate-kit
 
 Zero-dependency DDD / Clean Architecture building blocks for TypeScript. ESM-only,
 no runtime dependencies. Errors are values (`Result`/`Option`), the domain is pure,
