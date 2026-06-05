@@ -1,6 +1,3 @@
-# 1.0.0 (2026-02-19)
+# Changelog
 
-
-### Bug Fixes
-
-* set correct repo URLs and private flag for template ([7f0715f](https://github.com/axelhamil/ts-lib-template/commit/7f0715f7764ce3df922881ed031bc4dc760737df))
+All notable changes are generated automatically by [semantic-release](https://semantic-release.gitbook.io) from Conventional Commits on each release to `main`.

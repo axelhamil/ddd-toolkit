@@ -1,20 +1,33 @@
 {
-  "name": "ts-lib-template",
+  "name": "ddd-toolkit",
   "version": "1.0.0",
-  "private": true,
-  "description": "TypeScript library template. ESM, tsdown, vitest, biome, semantic-release. Zero config.",
+  "private": false,
+  "description": "Zero-dependency DDD building blocks for TypeScript: Result, Option, Entity, Aggregate, ValueObject, domain events and repository ports.",
   "type": "module",
   "license": "MIT",
   "author": "axelhamil",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/axelhamil/ts-lib-template.git"
+    "url": "git+https://github.com/axelhamil/ddd-toolkit.git"
   },
   "bugs": {
-    "url": "https://github.com/axelhamil/ts-lib-template/issues"
+    "url": "https://github.com/axelhamil/ddd-toolkit/issues"
   },
-  "homepage": "https://github.com/axelhamil/ts-lib-template#readme",
-  "keywords": [],
+  "homepage": "https://github.com/axelhamil/ddd-toolkit#readme",
+  "keywords": [
+    "ddd",
+    "domain-driven-design",
+    "clean-architecture",
+    "result",
+    "option",
+    "entity",
+    "aggregate",
+    "value-object",
+    "domain-events",
+    "repository",
+    "typescript",
+    "esm"
+  ],
   "packageManager": "pnpm@11.5.2",
   "engines": {
     "node": ">=24"
@@ -54,6 +67,7 @@
   "devDependencies": {
     "@arethetypeswrong/core": "^0.18.3",
     "@biomejs/biome": "^2.4.16",
+    "@types/node": "^24.7.0",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
     "@vitest/coverage-v8": "^4.1.8",

@@ -1,23 +1,202 @@
-# ts-lib-template — Full API Reference
+# ddd-toolkit — Full API Reference
 
-> One-line description
-
-<!-- Complete API documentation for LLM context windows -->
-
-## Exports
+> Zero-dependency Domain-Driven Design building blocks for TypeScript. ESM-only, Node >= 24. Errors are values (`Result`/`Option`), the domain is pure, ownership is enforced at the repository port.
 
 All imports come from the package root:
 
 ```typescript
-import {} from 'ts-lib-template';
+import {
+  Result, Option, Some, None, match, UUID, uuidv7, randomUuidV4,
+  Entity, Aggregate, ValueObject, BaseDomainEvent, WatchedList,
+  BaseRepository, ScopedRepository, RepoScope, createPaginatedResult, DEFAULT_PAGINATION,
+  IUnitOfWork, AppErrorException, httpStatusFromCode, DatabaseOperationError, InputParseError,
+  EventCollector, InMemoryEventDispatcher, onEvent, isEventHandler, domainEventToOutboxRow,
+} from 'ddd-toolkit';
 ```
+
+---
+
+## Primitives
+
+### Result<T, E = string>
+
+A success-or-failure container. Recoverable failures are returned, not thrown.
+
+- `Result.ok<T, E>(value?): Result<T, E>` — success (value optional).
+- `Result.fail<T, E>(error): Result<T, E>` — failure carrying an error.
+- `Result.combine(results: Result<unknown>[]): Result<unknown>` — first failure, else `ok()`.
+- `.getValue(): T` — unwrap; throws on a failure.
+- `.getError(): E` — unwrap error; throws on a success.
+- `.isSuccess: boolean`, `.isFailure: boolean`.
+
+```typescript
+const r = Result.ok(42);
+if (r.isSuccess) r.getValue(); // 42
+Result.combine([Result.ok(1), Result.fail('E')]).isFailure; // true
+```
+
+### Option<T> / Some<T> / None<T> / match
+
+Explicit optional; use instead of `null`/`undefined`.
+
+- `Option.some(value)`, `Option.none<T>()`, `Option.fromNullable(value)`.
+- `.isSome()`, `.isNone()`, `.unwrap()` (throws on None), `.unwrapOr(d)`, `.unwrapOrElse(fn)`.
+- `.map(fn)`, `.flatMap(fn)`, `.filter(pred)`, `.or(optb)`, `.orElse(fn)`, `.xor(optb)`, `.inspect(fn)`.
+- `.toUndefined()`, `.toNull()`.
+- `match(option, { Some: v => ..., None: () => ... })` — exhaustive pattern match.
+
+```typescript
+Option.fromNullable(maybe).map(x => x * 2).unwrapOr(0);
+match(opt, { Some: v => `got ${v}`, None: () => 'empty' });
+```
+
+### UUID<T extends string | number>, uuidv7(), randomUuidV4()
+
+- `new UUID(value?)` — wraps `value`, or generates a UUID v7 when omitted.
+- `.value: T`, `.equals(other?): boolean` — value equality narrowed to the same subclass.
+- Subclass for nominal id types: `class OrderId extends UUID<string> {}`.
+- `uuidv7(): string` — time-ordered v7 (sorts by creation time).
+- `randomUuidV4(): string` — random v4.
+
+---
+
+## Domain
+
+### Entity<T> (abstract) / IEntity<T>
+
+Identity-based domain object. Equality compares `_id`, not props.
+
+- `protected constructor(props: T, id?: UUID<string | number>)`.
+- `_id: UUID<string | number>`, `_props: T` (documented escape hatches).
+- `.equals(other?): boolean`, `.get(key): T[key]` (falls back to `_id` for an absent `id`).
+- `.toObject(): Record<string, unknown>` — unwraps VOs, UUIDs, nested entities and watched lists.
+- `.clone(props?): Entity<T>` — structural copy keeping the same identity.
+
+### Aggregate<T> (abstract) extends Entity<T> / IAggregate
+
+Aggregate root that records domain events.
+
+- `protected addEvent(event)`, `protected addEvents(events)`.
+- `.domainEvents: IDomainEvent[]` (defensive copy), `.clearEvents()`.
+- `.pullDomainEvents(): IDomainEvent[]` — returns and clears atomically.
+- `.hasEvents(): boolean`, `.getEventCount(): number`.
+
+### ValueObject<T> (abstract)
+
+Immutable, structurally-compared value.
+
+- `protected abstract validate(value: T): Result<T>` — validate/normalize.
+- `static create(value): Result<VO>` — constructs only if `validate` succeeds.
+- `.value: T` (frozen), `.equals(other): boolean` (deep via JSON for objects).
+
+```typescript
+class Email extends ValueObject<string> {
+  protected validate(v: string): Result<string> {
+    return v.includes('@') ? Result.ok(v.toLowerCase()) : Result.fail('EMAIL_INVALID');
+  }
+}
+Email.create('a@b.com'); // Result<Email>
+```
+
+### BaseDomainEvent<T> (abstract) / IDomainEvent<T>
+
+- `IDomainEvent<T>`: `{ eventType, dateOccurred, aggregateId, payload }`.
+- `BaseDomainEvent` stamps `dateOccurred`; subclasses set `eventType`, `aggregateId`, `payload`.
+
+### WatchedList<T> (abstract)
+
+Tracks a collection delta against its initial snapshot.
+
+- `abstract compareItems(a, b): boolean` — item identity.
+- `.add(item): Result<void>`, `.remove(item): Result<void>`.
+- `.getItems()`, `.getNewItems()`, `.getRemovedItems()`, `.hasChanges()`.
+- `.find(pred): Option<T>`, `.exists(item)`, `.count()`, `.mapToObject(): unknown[]`.
+
+---
+
+## Application
+
+### BaseRepository<T, TTransaction = unknown>
+
+Repository port. Reads return `Option`, every method returns `Result` (no throwing across the boundary).
+
+`create`, `update`, `delete`, `findById`, `findAll`, `findMany`, `findBy`, `exists`, `count`.
+
+### ScopedRepository<T, TScope extends RepoScope, TTransaction = unknown>
+
+Same surface, but every operation takes a `scope`. A wrong owner yields `Option.none()` (read) or a not-found `Result.fail` (write) — never a forbidden error, so existence never leaks.
+
+### RepoScope / ScopeOf<K>
+
+```typescript
+type RepoScope =
+  | { kind: 'user'; userId: UUID<string> }
+  | { kind: 'org'; organizationId: UUID<string> }
+  | { kind: 'user-in-org'; userId: UUID<string>; organizationId: UUID<string> };
+```
+
+- Factories: `RepoScope.user(id)`, `RepoScope.org(id)`, `RepoScope.userInOrg(userId, orgId)`.
+- Guards: `RepoScope.isUser(s)`, `RepoScope.isOrg(s)`, `RepoScope.isUserInOrg(s)`.
+- `ScopeOf<'user'>` extracts a single variant.
+
+### Pagination
+
+- `PaginationParams { page; limit }`, `PaginatedResult<T> { data; pagination { page, limit, total, totalPages, hasNextPage, hasPreviousPage } }`.
+- `createPaginatedResult(data, params, total): PaginatedResult<T>`.
+- `DEFAULT_PAGINATION = { page: 1, limit: 20 }`.
+
+### IUnitOfWork<TTx = unknown>
+
+- `startTransaction(cb)` — plain transaction.
+- `run(cb)` — transaction that also flushes `EventCollector` events (e.g. into an outbox) before commit.
+
+### Error taxonomy
+
+- `ErrorCode` = `` `${UPPERCASE}${ErrorSuffix}` `` (e.g. `USER_NOT_FOUND`).
+- Suffix → HTTP status: `_UNAUTHORIZED`/`_REQUIRED`→401, `_FORBIDDEN`→403, `_NOT_FOUND`→404, `_CONFLICT`/`_BLOCKED`→409, `_INVALID`→400, `_INTEGRITY_FAILED`→422, `_RATE_LIMITED`→429, `_PROVIDER_FAILURE`→502, `_UNAVAILABLE`→503, `_TIMEOUT`→504.
+- `httpStatusFromCode(code): number`.
+- `AppError<Code> { code, message, metadata? }`, `AppErrorException` (throwable form).
+- `DatabaseOperationError(message, options)`, `InputParseError(message, options)` — preserve `cause`.
+
+---
+
+## Events
+
+### EventCollector
+
+`AsyncLocalStorage`-backed, request-scoped event buffer.
+
+- `runWithContext(cb)` — run work inside a fresh context.
+- `add(events)` — buffer one or many (warns via the out-of-context logger if no context).
+- `drain(): IDomainEvent[]` — return and clear buffered events.
+- `hasContext(): boolean`, `setOutOfContextLogger(fn | null)`.
+
+### Dispatchers
+
+- `IEventDispatcher` — `subscribe`, `unsubscribe`, `dispatch`, `dispatchAll`, `isSubscribed`, `getHandlerCount`, `clearHandlers`.
+- `InMemoryEventDispatcher implements IEventDispatcher` — in-process; a failing/throwing handler is logged (via `setLogger(EventDispatcherLogger)`) and never aborts the others.
+- `EventHandlerFn<T>`, `IEventHandler<T>`.
+
+### onEvent / isEventHandler
+
+DI-friendly handler factory.
+
+```typescript
+const handler = onEvent('user.created', (deps: Deps) => async (event) => { ... });
+isEventHandler(handler(deps)); // true
+```
+
+### Outbox mapping
+
+- `domainEventToOutboxRow(event, scope): OutboxRow` — maps a domain event to a CloudEvents-shaped row.
+- `OutboxRow`, `OutboxMappingScope { source, organizationId?, aggregateType, traceparent? }`.
 
 ---
 
 ## Source
 
-- Repository: https://github.com/axelhamil/ts-lib-template
+- Repository: https://github.com/axelhamil/ddd-toolkit
 - License: MIT
-- Runtime: Node >= 24, ESM only
-- Build: tsdown (ESM, dts, sourcemap, minify, treeshake)
-- Types validated with publint + are-the-types-wrong
+- Runtime: Node >= 24, ESM only, zero runtime dependencies (`node:crypto`, `node:async_hooks` from stdlib)
+- Build: tsdown (ESM, dts, sourcemap, minify, treeshake); types validated with publint + are-the-types-wrong
+- Tests: Vitest 4, 326 tests, V8 coverage at 90% thresholds

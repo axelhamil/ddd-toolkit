@@ -6,6 +6,6 @@ By participating in this project, you agree to abide by its terms.
 
 ## Reporting
 
-If you experience or witness unacceptable behavior, please open an issue on [GitHub Issues](https://github.com/axelhamil/ts-lib-template/issues) or contact the maintainer directly.
+If you experience or witness unacceptable behavior, please open an issue on [GitHub Issues](https://github.com/axelhamil/ddd-toolkit/issues) or contact the maintainer directly.
 
 All reports will be reviewed and handled with discretion.

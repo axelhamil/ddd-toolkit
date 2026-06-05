@@ -1,26 +1,60 @@
-# ts-lib-template
+# ddd-toolkit
 
-> One-line description
+> Zero-dependency Domain-Driven Design building blocks for TypeScript: Result, Option, Entity, Aggregate, ValueObject, domain events and repository ports.
 
-ESM-only TypeScript library. Node >= 24, zero runtime dependencies. Built with tsdown, tested with Vitest, linted with Biome, released with semantic-release.
+ESM-only TypeScript library. Node >= 24, zero runtime dependencies. Errors are values (`Result`/`Option`), the domain is pure, ownership is enforced at the repository port. Built with tsdown, tested with Vitest, linted with Biome, released with semantic-release.
 
 ## Public API
 
-<!-- List exported functions and types from src/index.ts -->
+All exports come from the package root (`import { ... } from 'ddd-toolkit'`).
+
+Primitives:
+- `Result<T, E = string>` — success/failure container: `ok`, `fail`, `combine`, `getValue`, `getError`, `isSuccess`, `isFailure`.
+- `Option<T>`, `Some<T>`, `None<T>`, `match(option, { Some, None })` — explicit optional: `some`, `none`, `fromNullable`, `map`, `flatMap`, `filter`, `or`, `orElse`, `xor`, `inspect`, `unwrap`, `unwrapOr`, `unwrapOrElse`, `toUndefined`, `toNull`.
+- `UUID<T extends string | number>`, `uuidv7()`, `randomUuidV4()` — typed identifier (defaults to UUID v7) and standalone generators.
+
+Domain:
+- `Entity<T>`, `IEntity<T>` — identity equality, `get(key)`, `toObject()`, `clone()`.
+- `Aggregate<T>`, `IAggregate` — entity + events: `addEvent`, `addEvents`, `pullDomainEvents`, `clearEvents`, `hasEvents`, `getEventCount`, `domainEvents`.
+- `ValueObject<T>` — immutable structural value; `static create()` validates via `validate()`.
+- `BaseDomainEvent<T>`, `IDomainEvent<T>` — domain event base + interface.
+- `WatchedList<T>` — tracks added/removed items vs an initial snapshot.
+
+Application:
+- `BaseRepository<T>`, `ScopedRepository<T, TScope>` — repository ports (reads → `Option`, all → `Result`).
+- `RepoScope`, `RepoScopeKind`, `ScopeOf<K>` — `user` | `org` | `user-in-org` scopes, factories + guards.
+- `PaginationParams`, `PaginatedResult<T>`, `createPaginatedResult`, `DEFAULT_PAGINATION`.
+- `IUnitOfWork<TTx>` — transaction / unit-of-work port.
+- `ErrorCode`, `ErrorSuffix`, `ErrorStatus`, `AppError`, `AppErrorException`, `httpStatusFromCode` — error taxonomy mapping suffix → HTTP status.
+- `DatabaseOperationError`, `InputParseError`.
+
+Events:
+- `EventCollector` — AsyncLocalStorage request-scoped event buffer.
+- `IEventDispatcher`, `InMemoryEventDispatcher`, `EventDispatcherLogger`, `EventHandlerFn`, `IEventHandler`.
+- `onEvent`, `isEventHandler`, `EVENT_HANDLER_SYMBOL`, `EventHandler`, `OutOfContextLogger`.
+- `domainEventToOutboxRow`, `OutboxRow`, `OutboxMappingScope`.
 
 ## Install
 
 ```
-pnpm add ts-lib-template
+pnpm add ddd-toolkit
 ```
 
 ## Quick Example
 
 ```typescript
-import {} from 'ts-lib-template';
+import { Result, ValueObject } from 'ddd-toolkit';
+
+class Email extends ValueObject<string> {
+  protected validate(value: string): Result<string> {
+    return value.includes('@') ? Result.ok(value.toLowerCase()) : Result.fail('EMAIL_INVALID');
+  }
+}
+
+const email = Email.create('Ada@Example.com'); // Result<Email>
 ```
 
 ## Documentation
 
-- Full docs: https://github.com/axelhamil/ts-lib-template
+- Full docs: https://github.com/axelhamil/ddd-toolkit
 - Detailed API: llms-full.txt

@@ -8,7 +8,7 @@
 
 ## Reporting a Vulnerability
 
-**Please use [GitHub Private Vulnerability Reporting](https://github.com/axelhamil/ts-lib-template/security/advisories/new)** to report security issues.
+**Please use [GitHub Private Vulnerability Reporting](https://github.com/axelhamil/ddd-toolkit/security/advisories/new)** to report security issues.
 
 Do **not** open a public issue for security vulnerabilities.
 

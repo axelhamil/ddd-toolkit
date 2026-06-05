@@ -5,8 +5,8 @@ Thanks for your interest in contributing!
 ## Quick Setup
 
 ```bash
-git clone https://github.com/axelhamil/ts-lib-template.git
-cd ts-lib-template && pnpm install
+git clone https://github.com/axelhamil/ddd-toolkit.git
+cd ddd-toolkit && pnpm install
 pnpm check
 ```
 

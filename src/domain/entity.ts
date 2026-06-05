@@ -1,0 +1,81 @@
+import { UUID } from '../primitives/uuid.js';
+import { ValueObject } from './value-object.js';
+import { WatchedList } from './watched-list.js';
+
+export interface IEntity<T> {
+  readonly _id: UUID<string | number>;
+  readonly _props: T;
+  equals(object?: IEntity<T>): boolean;
+  toObject(): Record<string, unknown>;
+}
+
+function isEntity(v: unknown): v is IEntity<unknown> {
+  return v instanceof Entity;
+}
+
+/**
+ * Base class for domain entities — objects with a stable identity (`_id`) whose
+ * equality is identity-based, not value-based. Extend it and expose behaviour
+ * through methods; read props via `get(key)` rather than public getters.
+ */
+export abstract class Entity<T> implements IEntity<T> {
+  public readonly _props: T;
+  public readonly _id: UUID<string | number>;
+
+  protected constructor(props: T, id?: UUID<string | number>) {
+    this._id = id || new UUID();
+    this._props = props;
+  }
+
+  /** Two entities are equal when they share the same identity. */
+  public equals(object?: IEntity<T>): boolean {
+    if (!object || !isEntity(object)) return false;
+    if (this === object) return true;
+    return this._id.equals(object._id);
+  }
+
+  /** Read a prop by key. Falls back to the entity id for an absent `id` prop. */
+  get<Key extends keyof T>(key: Key): T[Key] {
+    const prop = this._props[key];
+
+    if (key === 'id' && !prop) {
+      return this._id as unknown as T[Key];
+    }
+
+    return prop;
+  }
+
+  /** Deep-ish plain serialization: unwraps VOs, UUIDs, nested entities and lists. */
+  public toObject(): Record<string, unknown> {
+    const plainObject = {} as Record<string, unknown>;
+    for (const key in this._props) {
+      const prop = this._props[key];
+      if (prop instanceof ValueObject || prop instanceof UUID) {
+        plainObject[key] = prop.value;
+      } else if (prop instanceof Entity) {
+        plainObject[key] = prop.toObject();
+      } else if (prop instanceof WatchedList) {
+        plainObject[key] = prop.mapToObject();
+      } else {
+        plainObject[key] = prop;
+      }
+    }
+
+    return {
+      ...plainObject,
+      id: this._id.value,
+    };
+  }
+
+  /** Structural copy keeping the same identity, with optional prop overrides. */
+  public clone(props?: Partial<T>): Entity<T> {
+    const clonedProps = { ...this._props, ...props };
+
+    const EntityConstructor = this.constructor as new (
+      props: T,
+      id?: UUID<string | number>,
+    ) => Entity<T>;
+
+    return new EntityConstructor(clonedProps, this._id);
+  }
+}
